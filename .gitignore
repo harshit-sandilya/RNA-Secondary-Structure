@@ -2,3 +2,10 @@ data/csv/*
 data/final/*
 
 Regression/__pycache__/
+
+Classification/__pycache__/
+Classification/RL/__pycache__/
+
+logs/*
+
+dqn_model.zip

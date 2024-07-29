@@ -19,7 +19,7 @@ def calc(predicted, actual):
     actual = actual.flatten()
     predicted = predicted.flatten()
 
-    labels = torch.unique(rounded_predicted).tolist()
+    labels = [0, 1, 2, 3]
 
     acc = accuracy_score(actual, rounded_predicted)
     bal_acc = balanced_accuracy_score(actual, rounded_predicted)
@@ -54,17 +54,15 @@ def calc(predicted, actual):
     predicted_unpad = []
     for i in range(len(actual)):
         if actual[i] != 0:
-            actual_unpad.append(actual[i])
-            predicted_unpad.append(rounded_predicted[i])
-        else:
             actual_unpad.append(actual[i] - 1)
             predicted_unpad.append(rounded_predicted[i] - 1)
+
     actual_unpad = torch.tensor(actual_unpad)
     predicted_unpad = torch.tensor(predicted_unpad)
     rounded_predicted_unpad = torch.round(predicted_unpad).clamp(min=0, max=2)
     rounded_predicted_unpad = rounded_predicted_unpad.flatten()
 
-    labels_unpad = torch.unique(rounded_predicted_unpad).tolist()
+    labels_unpad = [0, 1, 2]
 
     acc_unpad = accuracy_score(actual_unpad, rounded_predicted_unpad)
     bal_acc_unpad = balanced_accuracy_score(actual_unpad, rounded_predicted_unpad)

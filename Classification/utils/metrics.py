@@ -8,90 +8,107 @@ from sklearn.metrics import (
     precision_score,
     recall_score,
 )
+from concurrent.futures import ThreadPoolExecutor
+
+
+def accuracy_metric(actual, predicted):
+    return accuracy_score(actual, predicted)
+
+
+def balanced_accuracy_metric(actual, predicted):
+    return balanced_accuracy_score(actual, predicted)
+
+
+def f1_metric(actual, predicted, labels):
+    return f1_score(actual, predicted, average="macro", labels=labels, zero_division=1)
+
+
+def fbeta_metric(actual, predicted, labels):
+    return fbeta_score(
+        actual, predicted, beta=0.5, average="macro", labels=labels, zero_division=1
+    )
+
+
+def matthews_metric(actual, predicted):
+    return matthews_corrcoef(actual, predicted)
+
+
+def precision_metric(actual, predicted, labels):
+    return precision_score(
+        actual, predicted, average="macro", labels=labels, zero_division=1
+    )
+
+
+def recall_metric(actual, predicted, labels):
+    return recall_score(
+        actual, predicted, average="macro", labels=labels, zero_division=1
+    )
 
 
 def calc(predicted, actual):
-    predicted = predicted.flatten()
-    actual = actual.flatten()
+    predicted = predicted.flatten().numpy()
+    actual = actual.flatten().numpy()
     labels = [0, 1, 2, 3]
 
-    acc = accuracy_score(actual, predicted)
-    bal_acc = balanced_accuracy_score(actual, predicted)
-    f1 = f1_score(actual, predicted, average="macro", labels=labels, zero_division=1)
-    fbeta = fbeta_score(
-        actual,
-        predicted,
-        beta=0.5,
-        average="macro",
-        labels=labels,
-        zero_division=1,
-    )
-    matthews = matthews_corrcoef(actual, predicted)
-    precision = precision_score(
-        actual, predicted, average="macro", labels=labels, zero_division=1
-    )
-    recall = recall_score(
-        actual, predicted, average="macro", labels=labels, zero_division=1
-    )
+    metrics_funcs = {
+        "accuracy": accuracy_metric,
+        "balanced_accuracy": balanced_accuracy_metric,
+        "f1_score": f1_metric,
+        "fbeta_score": fbeta_metric,
+        "matthews_corrcoef": matthews_metric,
+        "precision_score": precision_metric,
+        "recall_score": recall_metric,
+    }
 
-    actual_unpad = []
-    predicted_unpad = []
-    for i in range(len(actual)):
-        if actual[i] != 0:
-            actual_unpad.append(actual[i] - 1)
-            predicted_unpad.append(predicted[i] - 1)
+    with ThreadPoolExecutor() as executor:
+        futures = {
+            name: (
+                executor.submit(func, actual, predicted, labels)
+                if "labels" in func.__code__.co_varnames
+                else executor.submit(func, actual, predicted)
+            )
+            for name, func in metrics_funcs.items()
+        }
+
+        results = {name: future.result() for name, future in futures.items()}
+
+    actual_unpad = [actual[i] - 1 for i in range(len(actual)) if actual[i] != 0]
+    predicted_unpad = [
+        predicted[i] - 1 for i in range(len(predicted)) if actual[i] != 0
+    ]
 
     actual_unpad = torch.tensor(actual_unpad)
     predicted_unpad = torch.tensor(predicted_unpad)
-
     labels_unpad = [0, 1, 2]
 
-    acc_unpad = accuracy_score(actual_unpad, predicted_unpad)
-    bal_acc_unpad = balanced_accuracy_score(actual_unpad, predicted_unpad)
-    f1_unpad = f1_score(
-        actual_unpad,
-        predicted_unpad,
-        average="macro",
-        labels=labels_unpad,
-        zero_division=1,
-    )
-    fbeta_unpad = fbeta_score(
-        actual_unpad,
-        predicted_unpad,
-        beta=0.5,
-        average="macro",
-        labels=labels_unpad,
-        zero_division=1,
-    )
-    matthews_unpad = matthews_corrcoef(actual_unpad, predicted_unpad)
-    precision_unpad = precision_score(
-        actual_unpad,
-        predicted_unpad,
-        average="macro",
-        labels=labels_unpad,
-        zero_division=1,
-    )
-    recall_unpad = recall_score(
-        actual_unpad,
-        predicted_unpad,
-        average="macro",
-        labels=labels_unpad,
-        zero_division=1,
-    )
+    with ThreadPoolExecutor() as executor:
+        futures_unpad = {
+            "accuracy_unpad": executor.submit(
+                accuracy_metric, actual_unpad, predicted_unpad
+            ),
+            "balanced_accuracy_unpad": executor.submit(
+                balanced_accuracy_metric, actual_unpad, predicted_unpad
+            ),
+            "f1_score_unpad": executor.submit(
+                f1_metric, actual_unpad, predicted_unpad, labels_unpad
+            ),
+            "fbeta_score_unpad": executor.submit(
+                fbeta_metric, actual_unpad, predicted_unpad, labels_unpad
+            ),
+            "matthews_corrcoef_unpad": executor.submit(
+                matthews_metric, actual_unpad, predicted_unpad
+            ),
+            "precision_score_unpad": executor.submit(
+                precision_metric, actual_unpad, predicted_unpad, labels_unpad
+            ),
+            "recall_score_unpad": executor.submit(
+                recall_metric, actual_unpad, predicted_unpad, labels_unpad
+            ),
+        }
 
-    return {
-        "accuracy": acc,
-        "balanced_accuracy": bal_acc,
-        "f1_score": f1,
-        "fbeta_score": fbeta,
-        "matthews_corrcoef": matthews,
-        "precision_score": precision,
-        "recall_score": recall,
-        "accuracy_unpad": acc_unpad,
-        "balanced_accuracy_unpad": bal_acc_unpad,
-        "f1_score_unpad": f1_unpad,
-        "fbeta_score_unpad": fbeta_unpad,
-        "matthews_corrcoef_unpad": matthews_unpad,
-        "precision_score_unpad": precision_unpad,
-        "recall_score_unpad": recall_unpad,
-    }
+        results_unpad = {
+            name: future.result() for name, future in futures_unpad.items()
+        }
+
+    results.update(results_unpad)
+    return results

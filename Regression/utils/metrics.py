@@ -11,125 +11,142 @@ from sklearn.metrics import (
     mean_absolute_error,
     r2_score,
 )
+from concurrent.futures import ThreadPoolExecutor
+
+
+# Define individual metric functions
+def accuracy_metric(actual, predicted):
+    return accuracy_score(actual, predicted)
+
+
+def balanced_accuracy_metric(actual, predicted):
+    return balanced_accuracy_score(actual, predicted)
+
+
+def f1_metric(actual, predicted, labels):
+    return f1_score(actual, predicted, average="macro", labels=labels, zero_division=1)
+
+
+def fbeta_metric(actual, predicted, labels):
+    return fbeta_score(
+        actual, predicted, beta=0.5, average="macro", labels=labels, zero_division=1
+    )
+
+
+def matthews_metric(actual, predicted):
+    return matthews_corrcoef(actual, predicted)
+
+
+def precision_metric(actual, predicted, labels):
+    return precision_score(
+        actual, predicted, average="macro", labels=labels, zero_division=1
+    )
+
+
+def recall_metric(actual, predicted, labels):
+    return recall_score(
+        actual, predicted, average="macro", labels=labels, zero_division=1
+    )
+
+
+def mse_metric(actual, predicted):
+    return mean_squared_error(actual, predicted)
+
+
+def mae_metric(actual, predicted):
+    return mean_absolute_error(actual, predicted)
+
+
+def r2_metric(actual, predicted):
+    return r2_score(actual, predicted)
 
 
 def calc(predicted, actual):
-    rounded_predicted = torch.round(predicted).clamp(min=0, max=3)
-    rounded_predicted = rounded_predicted.flatten()
-    actual = actual.flatten()
-    predicted = predicted.flatten()
+    rounded_predicted = torch.round(predicted).clamp(min=0, max=3).flatten().numpy()
+    actual = actual.flatten().numpy()
+    predicted = predicted.flatten().numpy()
 
     labels = [0, 1, 2, 3]
 
-    acc = accuracy_score(actual, rounded_predicted)
-    bal_acc = balanced_accuracy_score(actual, rounded_predicted)
-    f1 = f1_score(
-        actual, rounded_predicted, average="macro", labels=labels, zero_division=1
+    metrics_funcs = {
+        "accuracy": lambda: accuracy_metric(actual, rounded_predicted),
+        "balanced_accuracy": lambda: balanced_accuracy_metric(
+            actual, rounded_predicted
+        ),
+        "f1_score": lambda: f1_metric(actual, rounded_predicted, labels),
+        "fbeta_score": lambda: fbeta_metric(actual, rounded_predicted, labels),
+        "matthews_corrcoef": lambda: matthews_metric(actual, rounded_predicted),
+        "precision_score": lambda: precision_metric(actual, rounded_predicted, labels),
+        "recall_score": lambda: recall_metric(actual, rounded_predicted, labels),
+        "mean_squared_error_round": lambda: mse_metric(actual, rounded_predicted),
+        "mean_absolute_error_round": lambda: mae_metric(actual, rounded_predicted),
+        "r2_score_round": lambda: r2_metric(actual, rounded_predicted),
+        "mean_squared_error": lambda: mse_metric(actual, predicted),
+        "mean_absolute_error": lambda: mae_metric(actual, predicted),
+        "r2_score": lambda: r2_metric(actual, predicted),
+    }
+
+    with ThreadPoolExecutor() as executor:
+        futures = {name: executor.submit(func) for name, func in metrics_funcs.items()}
+        results = {name: future.result() for name, future in futures.items()}
+
+    actual_unpad = [actual[i] - 1 for i in range(len(actual)) if actual[i] != 0]
+    predicted_unpad = [
+        rounded_predicted[i] - 1
+        for i in range(len(rounded_predicted))
+        if actual[i] != 0
+    ]
+
+    actual_unpad = torch.tensor(actual_unpad).numpy()
+    predicted_unpad = torch.tensor(predicted_unpad).numpy()
+    rounded_predicted_unpad = (
+        torch.round(torch.tensor(predicted_unpad)).clamp(min=0, max=2).numpy()
     )
-    fbeta = fbeta_score(
-        actual,
-        rounded_predicted,
-        beta=0.5,
-        average="macro",
-        labels=labels,
-        zero_division=1,
-    )
-    matthews = matthews_corrcoef(actual, rounded_predicted)
-    precision = precision_score(
-        actual, rounded_predicted, average="macro", labels=labels, zero_division=1
-    )
-    recall = recall_score(
-        actual, rounded_predicted, average="macro", labels=labels, zero_division=1
-    )
-
-    mse_round = mean_squared_error(actual, rounded_predicted)
-    mae_round = mean_absolute_error(actual, rounded_predicted)
-    r2_round = r2_score(actual, rounded_predicted)
-
-    mse = mean_squared_error(actual, predicted)
-    mae = mean_absolute_error(actual, predicted)
-    r2 = r2_score(actual, predicted)
-
-    actual_unpad = []
-    predicted_unpad = []
-    for i in range(len(actual)):
-        if actual[i] != 0:
-            actual_unpad.append(actual[i] - 1)
-            predicted_unpad.append(rounded_predicted[i] - 1)
-
-    actual_unpad = torch.tensor(actual_unpad)
-    predicted_unpad = torch.tensor(predicted_unpad)
-    rounded_predicted_unpad = torch.round(predicted_unpad).clamp(min=0, max=2)
-    rounded_predicted_unpad = rounded_predicted_unpad.flatten()
-
     labels_unpad = [0, 1, 2]
 
-    acc_unpad = accuracy_score(actual_unpad, rounded_predicted_unpad)
-    bal_acc_unpad = balanced_accuracy_score(actual_unpad, rounded_predicted_unpad)
-    f1_unpad = f1_score(
-        actual_unpad,
-        rounded_predicted_unpad,
-        average="macro",
-        labels=labels_unpad,
-        zero_division=1,
-    )
-    fbeta_unpad = fbeta_score(
-        actual_unpad,
-        rounded_predicted_unpad,
-        beta=0.5,
-        average="macro",
-        labels=labels_unpad,
-        zero_division=1,
-    )
-    matthews_unpad = matthews_corrcoef(actual_unpad, rounded_predicted_unpad)
-    precision_unpad = precision_score(
-        actual_unpad,
-        rounded_predicted_unpad,
-        average="macro",
-        labels=labels_unpad,
-        zero_division=1,
-    )
-    recall_unpad = recall_score(
-        actual_unpad,
-        rounded_predicted_unpad,
-        average="macro",
-        labels=labels_unpad,
-        zero_division=1,
-    )
-
-    mse_unpad = mean_squared_error(actual_unpad, predicted_unpad)
-    mae_unpad = mean_absolute_error(actual_unpad, predicted_unpad)
-    r2_unpad = r2_score(actual_unpad, predicted_unpad)
-
-    mse_unpad_round = mean_squared_error(actual_unpad, rounded_predicted_unpad)
-    mae_unpad_round = mean_absolute_error(actual_unpad, rounded_predicted_unpad)
-    r2_unpad_round = r2_score(actual_unpad, rounded_predicted_unpad)
-
-    return {
-        "accuracy": acc,
-        "balanced_accuracy": bal_acc,
-        "f1_score": f1,
-        "fbeta_score": fbeta,
-        "matthews_corrcoef": matthews,
-        "precision_score": precision,
-        "recall_score": recall,
-        "mean_squared_error_round": mse_round,
-        "mean_absolute_error_round": mae_round,
-        "r2_score_round": r2_round,
-        "mean_squared_error": mse,
-        "mean_absolute_error": mae,
-        "r2_score": r2,
-        "accuracy_unpad": acc_unpad,
-        "balanced_accuracy_unpad": bal_acc_unpad,
-        "f1_score_unpad": f1_unpad,
-        "fbeta_score_unpad": fbeta_unpad,
-        "matthews_corrcoef_unpad": matthews_unpad,
-        "precision_score_unpad": precision_unpad,
-        "recall_score_unpad": recall_unpad,
-        "mean_squared_error_unpad": mse_unpad,
-        "mean_absolute_error_unpad": mae_unpad,
-        "r2_score_unpad": r2_unpad,
-        "mean_squared_error_unpad_round": mse_unpad_round,
-        "mean_absolute_error_unpad_round": mae_unpad_round,
-        "r2_score_unpad_round": r2_unpad_round,
+    metrics_funcs_unpad = {
+        "accuracy_unpad": lambda: accuracy_metric(
+            actual_unpad, rounded_predicted_unpad
+        ),
+        "balanced_accuracy_unpad": lambda: balanced_accuracy_metric(
+            actual_unpad, rounded_predicted_unpad
+        ),
+        "f1_score_unpad": lambda: f1_metric(
+            actual_unpad, rounded_predicted_unpad, labels_unpad
+        ),
+        "fbeta_score_unpad": lambda: fbeta_metric(
+            actual_unpad, rounded_predicted_unpad, labels_unpad
+        ),
+        "matthews_corrcoef_unpad": lambda: matthews_metric(
+            actual_unpad, rounded_predicted_unpad
+        ),
+        "precision_score_unpad": lambda: precision_metric(
+            actual_unpad, rounded_predicted_unpad, labels_unpad
+        ),
+        "recall_score_unpad": lambda: recall_metric(
+            actual_unpad, rounded_predicted_unpad, labels_unpad
+        ),
+        "mean_squared_error_unpad": lambda: mse_metric(actual_unpad, predicted_unpad),
+        "mean_absolute_error_unpad": lambda: mae_metric(actual_unpad, predicted_unpad),
+        "r2_score_unpad": lambda: r2_metric(actual_unpad, predicted_unpad),
+        "mean_squared_error_unpad_round": lambda: mse_metric(
+            actual_unpad, rounded_predicted_unpad
+        ),
+        "mean_absolute_error_unpad_round": lambda: mae_metric(
+            actual_unpad, rounded_predicted_unpad
+        ),
+        "r2_score_unpad_round": lambda: r2_metric(
+            actual_unpad, rounded_predicted_unpad
+        ),
     }
+
+    with ThreadPoolExecutor() as executor:
+        futures_unpad = {
+            name: executor.submit(func) for name, func in metrics_funcs_unpad.items()
+        }
+        results_unpad = {
+            name: future.result() for name, future in futures_unpad.items()
+        }
+
+    results.update(results_unpad)
+    return results

@@ -53,8 +53,8 @@ for batch in range(x_test.shape[0]):
         actuals.append(pred)
 print("Got the predictions")
 
-actuals = torch.tensor(actuals)
 predictions = torch.tensor(predictions)
+actuals = torch.tensor(actuals)
 print(f"Total reward: {total_reward}")
 print(calc(predictions, actuals))
 print("Test complete")

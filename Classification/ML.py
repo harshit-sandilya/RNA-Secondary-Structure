@@ -22,8 +22,6 @@ from sklearn.ensemble import (
     BaggingClassifier,
     ExtraTreesClassifier,
     RandomForestClassifier,
-    StackingClassifier,
-    VotingClassifier,
     HistGradientBoostingClassifier,
 )
 
@@ -192,18 +190,6 @@ models = [
         "name": "Random Forest Classifier",
         "model": MultiOutputClassifier(
             OneVsRestClassifier(RandomForestClassifier()), n_jobs=-1
-        ),
-    },
-    {
-        "name": "Stacking Classifier",
-        "model": MultiOutputClassifier(
-            OneVsRestClassifier(StackingClassifier()), n_jobs=-1
-        ),
-    },
-    {
-        "name": "Voting Classifier",
-        "model": MultiOutputClassifier(
-            OneVsRestClassifier(VotingClassifier()), n_jobs=-1
         ),
     },
     {

@@ -7,7 +7,7 @@ from torch.utils.data import TensorDataset
 
 class DataModule:
     def __init__(self):
-        self.max_length = 100
+        self.max_length = 300
         self.min_length = 30
 
     def _convert_to_tensor(self, df):
@@ -34,23 +34,23 @@ class DataModule:
             )
             t_x[i] = torch.cat(
                 [
-                    torch.zeros(15, dtype=torch.long),
+                    torch.zeros(25, dtype=torch.long),
                     t_x[i],
-                    torch.zeros(15, dtype=torch.long),
+                    torch.zeros(25, dtype=torch.long),
                 ]
             )
             t_y[i] = torch.cat(
                 [
-                    torch.zeros(15, dtype=torch.long),
+                    torch.zeros(25, dtype=torch.long),
                     t_y[i],
-                    torch.zeros(15, dtype=torch.long),
+                    torch.zeros(25, dtype=torch.long),
                 ]
             )
-            t_x[i] = t_x[i].unfold(0, 31, 1)
-            t_y[i] = t_y[i].unfold(0, 31, 1)
+            t_x[i] = t_x[i].unfold(0, 51, 1)
+            t_y[i] = t_y[i].unfold(0, 51, 1)
         x = torch.stack(t_x)
         y = torch.stack(t_y)
-        y = y[:, :, 15:16]
+        y = y[:, :, 25:26]
         return x, y
 
     def _process_df(self, df):

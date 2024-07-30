@@ -16,7 +16,7 @@ def generate_dot_bracket(sequence, base_pairs):
 
 
 def process_file(file):
-    with open(f"{file}.dp") as f:
+    with open(f"./data/{file}.dp") as f:
         lines = f.readlines()
     lines = [line.strip() for line in lines]
     lines = [
@@ -63,14 +63,14 @@ def process_file(file):
     df = df.drop(df[df["structure"].str.len() == 0].index)
     df = df.drop(df[df["sequence"].str.len() != df["structure"].str.len()].index)
     df = df.reset_index(drop=True)
-    df.to_csv(f"./csv/{file}.csv", index=False)
+    df.to_csv(f"./data/csv/{file}.csv", index=False)
 
 
 def process_single(folder, files):
     mismatch = 0
-    file_list = glob.glob(f"./{folder}/*.{files}")
+    file_list = glob.glob(f"./data/{folder}/*.{files}")
     print("Total files: ", len(file_list))
-    with open(f"./csv/{folder}.csv", "w") as f:
+    with open(f"./data/csv/{folder}.csv", "w") as f:
         writer = csv.writer(f)
         writer.writerow(["RNA_id", "sequence", "structure", "length", "source"])
         for file in tqdm(file_list):
@@ -93,9 +93,9 @@ def process_single(folder, files):
 
 def process_split(folder, file1, file2):
     mismatch = 0
-    filelist1 = glob.glob(f"./{folder}/*.{file1}")
+    filelist1 = glob.glob(f"./data/{folder}/*.{file1}")
     print("Total files: ", len(filelist1))
-    with open(f"./csv/{folder}.csv", "w") as f:
+    with open(f"./data/csv/{folder}.csv", "w") as f:
         writer = csv.writer(f)
         writer.writerow(["RNA_id", "sequence", "structure", "length", "source"])
         for file in tqdm(filelist1):
@@ -131,26 +131,26 @@ process_split("TS1", "fasta", "bps")
 process_split("VL1", "fasta", "bps")
 process_single("bpRNA", "dbn")
 
-df = pd.read_csv("./csv/bpRNA.csv")
+df = pd.read_csv("./data/csv/bpRNA.csv")
 df = df[["RFAM" in id for id in df["RNA_id"]]]
 df.reset_index(drop=True, inplace=True)
 df.drop_duplicates(subset=["sequence", "structure"], inplace=True)
 df.reset_index(drop=True, inplace=True)
 print("Filtered (RFAM): ", df.shape[0])
-df.to_csv("./csv/RFAM.csv", index=False)
+df.to_csv("./data/csv/RFAM.csv", index=False)
 
-df = pd.read_csv("./csv/bpRNA.csv")
+df = pd.read_csv("./data/csv/bpRNA.csv")
 df = df[["CRW" in id for id in df["RNA_id"]]]
 df.reset_index(drop=True, inplace=True)
 df.drop_duplicates(subset=["sequence", "structure"], inplace=True)
 df.reset_index(drop=True, inplace=True)
 print("Filtered (CRW): ", df.shape[0])
-df.to_csv("./csv/CRW.csv", index=False)
+df.to_csv("./data/csv/CRW.csv", index=False)
 
-df = pd.read_csv("./csv/bpRNA.csv")
+df = pd.read_csv("./data/csv/bpRNA.csv")
 df = df[["PDB" in id for id in df["RNA_id"]]]
 df.reset_index(drop=True, inplace=True)
 df.drop_duplicates(subset=["sequence", "structure"], inplace=True)
 df.reset_index(drop=True, inplace=True)
 print("Filtered (PDB): ", df.shape[0])
-df.to_csv("./csv/PDB.csv", index=False)
+df.to_csv("./data/csv/PDB.csv", index=False)

@@ -1,13 +1,16 @@
 data/csv/*
 data/final/*
 
-Regression/__pycache__/
-Regression/RL/__pycache__/
+regression/__pycache__/
+regression/utils/__pycache__/
+regression/utils/rl/__pycache__/
 
-Classification/__pycache__/
-Classification/RL/__pycache__/
+classification/__pycache__/
+classification/utils/__pycache__/
+classification/utils/rl/__pycache__/
 
 logs/*
+!logs/.gitkeep
 
 ddpg_model.zip
 dqn_model.zip

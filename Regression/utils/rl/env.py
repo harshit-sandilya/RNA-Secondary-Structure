@@ -46,22 +46,29 @@ class Environment(gym.Env):
                 done = True
             else:
                 observation = self.sample[self.current_batch, self.current_step]
-        reward = self.calculate_reward(action, observation)
+        reward = self.calculate_reward(action)
         return observation, reward, done, False, {}
 
-    def calculate_reward(self, structure, sequence):
-        structure = np.round(structure)
-        reward = 0
-        left = 0
-        right = len(structure) - 1
-        while left < right:
-            if (
-                structure[left] == 2
-                and structure[right] == 3
-                or structure[left] == 3
-                and structure[right] == 2
-            ):
-                reward += get_energy(sequence[left], sequence[right])
-            left += 1
-            right -= 1
+    # def calculate_reward(self, structure, sequence):
+    #     structure = np.round(structure)
+    #     reward = 0
+    #     left = 0
+    #     right = len(structure) - 1
+    #     while left < right:
+    #         if (
+    #             structure[left] == 2
+    #             and structure[right] == 3
+    #             or structure[left] == 3
+    #             and structure[right] == 2
+    #         ):
+    #             reward += get_energy(sequence[left], sequence[right])
+    #         left += 1
+    #         right -= 1
+    #     return reward
+
+    def calculate_reward(self, action):
+        target_value = self.output[self.current_batch, self.current_step]
+        predicted_value = action.round()
+        accuracy = np.mean(np.equal(predicted_value, target_value))
+        reward = accuracy * 100
         return reward

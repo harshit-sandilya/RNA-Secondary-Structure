@@ -1,13 +1,13 @@
 import pandas as pd
 import glob
 
-file_list = glob.glob("./csv/*.csv")
+file_list = glob.glob("./data/csv/*.csv")
 
 
 def append_files(file_list):
-    df = pd.read_csv(f"./final/{file_list[0]}.csv")
+    df = pd.read_csv(f"./data/final/{file_list[0]}.csv")
     for file in file_list[1:]:
-        df = pd.concat([df, pd.read_csv(f"./final/{file}.csv")], ignore_index=True)
+        df = pd.concat([df, pd.read_csv(f"./data/final/{file}.csv")], ignore_index=True)
     df.drop_duplicates(subset=["sequence", "structure"], inplace=True)
     df.reset_index(drop=True, inplace=True)
     df.drop_duplicates(subset=["sequence"], inplace=True)
@@ -27,7 +27,7 @@ for file in file_list:
 split_list = ["CRW", "RFAM", "RNAstrand", "PDB", "bpRNA"]
 
 for file in split_list:
-    df = pd.read_csv(f"./csv/{file}.csv")
+    df = pd.read_csv(f"./data/csv/{file}.csv")
     print("Original ({}): ".format(file), df.shape[0])
     train_df = df.sample(frac=0.75, random_state=42)
     test_df = df.drop(train_df.index)
@@ -35,14 +35,14 @@ for file in split_list:
     test_df.reset_index(drop=True, inplace=True)
     print("Train ({}): ".format(file), train_df.shape[0])
     print("Test ({}): ".format(file), test_df.shape[0])
-    train_df.to_csv(f"./final/{file}-train.csv", index=False)
-    test_df.to_csv(f"./final/{file}-test.csv", index=False)
+    train_df.to_csv(f"./data/final/{file}-train.csv", index=False)
+    test_df.to_csv(f"./data/final/{file}-test.csv", index=False)
 
 remaining_list = ["TR0", "TR1", "VL0", "VL1", "TS0", "TS1"]
 
 for file in remaining_list:
-    df = pd.read_csv(f"./csv/{file}.csv")
-    df.to_csv(f"./final/{file}.csv", index=False)
+    df = pd.read_csv(f"./data/csv/{file}.csv")
+    df.to_csv(f"./data/final/{file}.csv", index=False)
 
 train_list = [
     "CRW-train",
@@ -67,9 +67,9 @@ test_list = [
 ]
 
 combined_df = append_files(train_list)
-combined_df.to_csv("./final/train.csv", index=False)
+combined_df.to_csv("./data/final/train.csv", index=False)
 print("Train: ", combined_df.shape[0])
 
 combined_df = append_files(test_list)
-combined_df.to_csv("./final/test.csv", index=False)
+combined_df.to_csv("./data/final/test.csv", index=False)
 print("Test: ", combined_df.shape[0])

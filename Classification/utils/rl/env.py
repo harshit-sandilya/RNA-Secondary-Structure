@@ -10,7 +10,7 @@ class Environment(gym.Env):
         self.output = output
         self.action_space = spaces.Discrete(4, start=0)
         self.observation_space = spaces.Box(
-            low=0, high=4, shape=(31,), dtype=np.float32
+            low=0, high=4, shape=(51,), dtype=np.float32
         )
         self.batch_size = sample.shape[0]
         self.time_steps = sample.shape[1]
@@ -24,6 +24,11 @@ class Environment(gym.Env):
         return self.sample[self.current_batch, self.current_step], {}
 
     def step(self, action):
+        observation = self.sample[self.current_batch, self.current_step]
+        # if not np.all(observation == 0):
+        #     reward = self.calculate_reward(action)
+        # else:
+        #     reward = 0
         reward = self.calculate_reward(action)
         self.current_step += 1
         done = self.current_step >= self.time_steps
@@ -37,6 +42,7 @@ class Environment(gym.Env):
                 done = True
             else:
                 observation = self.sample[self.current_batch, self.current_step]
+
         return observation, reward, done, False, {}
 
     def calculate_reward(self, action):

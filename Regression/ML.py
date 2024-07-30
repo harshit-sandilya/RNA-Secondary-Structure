@@ -27,7 +27,7 @@ from sklearn.ensemble import (
 from sklearn.svm import SVR, LinearSVR, NuSVR
 from sklearn.tree import DecisionTreeRegressor, ExtraTreeRegressor
 
-from test import calc
+from utils.metrics import calc
 from tqdm import tqdm
 import pandas as pd
 import numpy as np
@@ -88,7 +88,7 @@ def write_res(writer, model, metric):
 
 
 def encode(df):
-    df = df[df["length"] <= 100]
+    df = df[df["length"] <= 300]
     df = df[df["length"] >= 30]
     df = df[["sequence", "structure"]]
     df["sequence"] = df["sequence"].str.upper()
@@ -244,7 +244,7 @@ tree_models = [
     },
 ]
 
-with open("./logs/Regression/resultsML.csv", "w") as f:
+with open("./logs/regression/resultsML.csv", "w") as f:
     writer = csv.DictWriter(
         f,
         fieldnames=[

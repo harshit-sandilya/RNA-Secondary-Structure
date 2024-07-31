@@ -2,7 +2,7 @@ from stable_baselines3.common.policies import BasePolicy
 from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
 from stable_baselines3.common.type_aliases import Schedule
 from stable_baselines3.common.preprocessing import get_flattened_obs_dim
-from q_net import CustomQNetwork
+from .q_net import CustomQNetwork
 import torch
 
 

@@ -157,12 +157,6 @@ models = [
         "model": MultiOutputClassifier(OneVsRestClassifier(BernoulliNB()), n_jobs=-1),
     },
     {
-        "name": "K Neighbors Classifier",
-        "model": MultiOutputClassifier(
-            OneVsRestClassifier(KNeighborsClassifier()), n_jobs=-1
-        ),
-    },
-    {
         "name": "Gradient Boosting Classifier",
         "model": MultiOutputClassifier(
             OneVsRestClassifier(GradientBoostingClassifier()), n_jobs=-1
@@ -184,12 +178,6 @@ models = [
         "name": "Extra Trees Classifier",
         "model": MultiOutputClassifier(
             OneVsRestClassifier(ExtraTreesClassifier()), n_jobs=-1
-        ),
-    },
-    {
-        "name": "Random Forest Classifier",
-        "model": MultiOutputClassifier(
-            OneVsRestClassifier(RandomForestClassifier()), n_jobs=-1
         ),
     },
     {

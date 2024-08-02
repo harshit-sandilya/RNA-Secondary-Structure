@@ -11,19 +11,19 @@ from sklearn.linear_model import (
     SGDClassifier,
     PassiveAggressiveClassifier,
 )
-from sklearn.svm import SVC
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.naive_bayes import GaussianNB, MultinomialNB, ComplementNB, BernoulliNB
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.svm import SVC
+from sklearn.naive_bayes import GaussianNB, MultinomialNB, BernoulliNB
+from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import (
+    RandomForestClassifier,
+    ExtraTreesClassifier,
     GradientBoostingClassifier,
     AdaBoostClassifier,
     BaggingClassifier,
-    ExtraTreesClassifier,
-    RandomForestClassifier,
-    HistGradientBoostingClassifier,
 )
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+from sklearn.gaussian_process import GaussianProcessClassifier
 
 from utils.metrics import calc
 
@@ -104,86 +104,76 @@ classes = [0, 1, 2, 3]
 models = [
     {
         "name": "Logistic Regression",
-        "model": MultiOutputClassifier(
-            OneVsRestClassifier(LogisticRegression()), n_jobs=-1
-        ),
+        "model": MultiOutputClassifier(OneVsRestClassifier(LogisticRegression())),
     },
     {
         "name": "Ridge Classifier",
-        "model": MultiOutputClassifier(
-            OneVsRestClassifier(RidgeClassifier()), n_jobs=-1
-        ),
+        "model": MultiOutputClassifier(RidgeClassifier()),
     },
     {
         "name": "SGD Classifier",
-        "model": MultiOutputClassifier(OneVsRestClassifier(SGDClassifier()), n_jobs=-1),
+        "model": MultiOutputClassifier(OneVsRestClassifier(SGDClassifier())),
     },
     {
         "name": "Passive Aggressive Classifier",
         "model": MultiOutputClassifier(
-            OneVsRestClassifier(PassiveAggressiveClassifier()), n_jobs=-1
+            OneVsRestClassifier(PassiveAggressiveClassifier())
         ),
+    },
+    {
+        "name": "K Neighbors Classifier",
+        "model": KNeighborsClassifier(),
     },
     {
         "name": "SVC",
-        "model": MultiOutputClassifier(OneVsRestClassifier(SVC()), n_jobs=-1),
-    },
-    {
-        "name": "Random Forest Classifier",
-        "model": MultiOutputClassifier(
-            OneVsRestClassifier(RandomForestClassifier()), n_jobs=-1
-        ),
-    },
-    {
-        "name": "Decision Tree Classifier",
-        "model": MultiOutputClassifier(
-            OneVsRestClassifier(DecisionTreeClassifier()), n_jobs=-1
-        ),
+        "model": MultiOutputClassifier(OneVsRestClassifier(SVC())),
     },
     {
         "name": "Gaussian NB",
-        "model": MultiOutputClassifier(OneVsRestClassifier(GaussianNB()), n_jobs=-1),
+        "model": MultiOutputClassifier(GaussianNB()),
     },
     {
         "name": "Multinomial NB",
-        "model": MultiOutputClassifier(OneVsRestClassifier(MultinomialNB()), n_jobs=-1),
-    },
-    {
-        "name": "Complement NB",
-        "model": MultiOutputClassifier(OneVsRestClassifier(ComplementNB()), n_jobs=-1),
+        "model": MultiOutputClassifier(MultinomialNB()),
     },
     {
         "name": "Bernoulli NB",
-        "model": MultiOutputClassifier(OneVsRestClassifier(BernoulliNB()), n_jobs=-1),
+        "model": MultiOutputClassifier(BernoulliNB()),
+    },
+    {
+        "name": "Decision Tree Classifier",
+        "model": DecisionTreeClassifier(),
+    },
+    {
+        "name": "Random Forest Classifier",
+        "model": RandomForestClassifier(),
+    },
+    {
+        "name": "Extra Trees Classifier",
+        "model": ExtraTreesClassifier(),
     },
     {
         "name": "Gradient Boosting Classifier",
         "model": MultiOutputClassifier(
-            OneVsRestClassifier(GradientBoostingClassifier()), n_jobs=-1
+            OneVsRestClassifier(GradientBoostingClassifier())
         ),
     },
     {
         "name": "Ada Boost Classifier",
-        "model": MultiOutputClassifier(
-            OneVsRestClassifier(AdaBoostClassifier()), n_jobs=-1
-        ),
+        "model": MultiOutputClassifier(AdaBoostClassifier()),
     },
     {
         "name": "Bagging Classifier",
-        "model": MultiOutputClassifier(
-            OneVsRestClassifier(BaggingClassifier()), n_jobs=-1
-        ),
+        "model": MultiOutputClassifier(BaggingClassifier()),
     },
     {
-        "name": "Extra Trees Classifier",
-        "model": MultiOutputClassifier(
-            OneVsRestClassifier(ExtraTreesClassifier()), n_jobs=-1
-        ),
+        "name": "Linear Discriminant Analysis",
+        "model": MultiOutputClassifier(LinearDiscriminantAnalysis()),
     },
     {
-        "name": "Hist Gradient Boosting Classifier",
+        "name": "Gaussian Process Classifier",
         "model": MultiOutputClassifier(
-            OneVsRestClassifier(HistGradientBoostingClassifier()), n_jobs=-1
+            OneVsRestClassifier(GaussianProcessClassifier())
         ),
     },
 ]

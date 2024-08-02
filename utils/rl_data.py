@@ -1,14 +1,13 @@
 import math
 import torch
-import numpy as np
 import pandas as pd
-from torch.utils.data import TensorDataset
 
 
 class DataModule:
     def __init__(self):
         self.max_length = 300
         self.min_length = 30
+        self.window_size = 51
 
     def _convert_to_tensor(self, df):
         t_x = df["sequence"].tolist()
@@ -18,6 +17,8 @@ class DataModule:
             t_y[i] = torch.tensor(t_y[i], dtype=torch.long)
             left = math.floor((self.max_length - len(t_x[i])) / 2)
             right = math.ceil((self.max_length - len(t_x[i])) / 2)
+            window_left = math.floor((self.window_size - 1) / 2)
+            window_right = math.ceil((self.window_size - 1) / 2)
             t_x[i] = torch.cat(
                 [
                     torch.zeros(left, dtype=torch.long),
@@ -34,29 +35,34 @@ class DataModule:
             )
             t_x[i] = torch.cat(
                 [
-                    torch.zeros(25, dtype=torch.long),
+                    torch.zeros(window_left, dtype=torch.long),
                     t_x[i],
-                    torch.zeros(25, dtype=torch.long),
+                    torch.zeros(window_right, dtype=torch.long),
                 ]
             )
             t_y[i] = torch.cat(
                 [
-                    torch.zeros(25, dtype=torch.long),
+                    torch.zeros(window_left, dtype=torch.long),
                     t_y[i],
-                    torch.zeros(25, dtype=torch.long),
+                    torch.zeros(window_right, dtype=torch.long),
                 ]
             )
-            t_x[i] = t_x[i].unfold(0, 51, 1)
-            t_y[i] = t_y[i].unfold(0, 51, 1)
+            t_x[i] = t_x[i].unfold(0, self.window_size, 1)
+            t_y[i] = t_y[i].unfold(0, self.window_size, 1)
         x = torch.stack(t_x)
         y = torch.stack(t_y)
-        y = y[:, :, 25:26]
+        y = y[:, :, window_left]
         return x, y
 
     def _process_df(self, df):
         df = df[["sequence", "structure"]]
         df = df[df["sequence"].str.len() <= self.max_length]
         df = df[df["sequence"].str.len() >= self.min_length]
+        df = df[df["structure"].str.len() == df["sequence"].str.len()]
+        df = df.dropna()
+        df = df.drop_duplicates()
+        df = df.drop_duplicates(subset=["sequence"])
+        df = df.reset_index(drop=True)
         df = df[df["sequence"].str.contains("^[AGUC]+$")]
         df = df[df["structure"].str.contains("^[/./).(]+$")]
         encoding_dict = {"A": 1, "C": 2, "G": 3, "U": 4}

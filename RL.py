@@ -1,11 +1,15 @@
 import torch
+import time
 import numpy as np
-from stable_baselines3 import DDPG
+from stable_baselines3 import DQN
 from stable_baselines3.common.callbacks import BaseCallback
 
-from utils.rl.env import Environment
-from utils.rl.data import DataModule
+from utils.rl_data import DataModule
+from utils.rl_env import Environment
 from utils.metrics import calc
+
+
+start_time = time.time()
 
 
 def normalize(array):
@@ -26,10 +30,10 @@ x_train, y_train = dm.train_set()
 x_train = normalize(x_train)
 env = Environment(x_train, y_train)
 
-model = DDPG("MlpPolicy", env, tensorboard_log="./logs/regression/ddpg/")
-model.learn(total_timesteps=10000, progress_bar=True, callback=TensorboardCallback())
-model.save("ddpg_model")
-print("Model trained")
+model = DQN("MlpPolicy", env, tensorboard_log="./logs/dqn/")
+model.learn(total_timesteps=100000, progress_bar=True, callback=TensorboardCallback())
+model.save("dqn_model")
+print(f"[{time.time()-start_time}]Model trained")
 
 
 x_test, y_test = dm.test_set()
@@ -42,16 +46,18 @@ actuals = []
 for batch in range(x_test.shape[0]):
     for step in range(x_test.shape[1]):
         obs = x_test[batch, step]
+        obs = obs.astype(np.float32)
         action, _states = model.predict(obs)
         reward = env.calculate_reward(action)
         total_reward += reward
-        pred = y_test[batch, step]
+        action = action.item()
+        pred = y_test[batch, step][0].item()
         predictions.append(action)
         actuals.append(pred)
-print("Got the predictions")
+print(f"[{time.time()-start_time}]Got the predictions")
 
-actuals = torch.tensor(actuals)
 predictions = torch.tensor(predictions)
+actuals = torch.tensor(actuals)
 print(f"Total reward: {total_reward}")
 print(calc(predictions, actuals))
-print("Test complete")
+print(f"[{time.time()-start_time}]Test complete")

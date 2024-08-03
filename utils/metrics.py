@@ -46,6 +46,10 @@ def recall_metric(actual, predicted, labels):
 
 
 def calc(predicted, actual):
+    if predicted.device.type != "cpu":
+        predicted = predicted.cpu()
+    if actual.device.type != "cpu":
+        actual = actual.cpu()
     predicted = predicted.flatten().numpy()
     actual = actual.flatten().numpy()
     labels = [0, 1, 2, 3]

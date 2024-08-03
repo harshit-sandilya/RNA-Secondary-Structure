@@ -2,7 +2,7 @@ data/csv/*
 data/final/*
 
 utils/__pycache__
-
+lightning_logs/
 
 logs/*
 !logs/.gitkeep

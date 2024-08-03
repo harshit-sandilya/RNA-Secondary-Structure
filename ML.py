@@ -2,6 +2,7 @@ import csv
 import torch
 import numpy as np
 import pandas as pd
+from tqdm import tqdm
 from sklearn.multioutput import MultiOutputClassifier
 from sklearn.multiclass import OneVsRestClassifier
 
@@ -97,7 +98,7 @@ def load_data():
 
 X_train, Y_train, X_test, Y_test = load_data()
 Y_test = torch.tensor(Y_test)
-print(Y_train.shape)
+print(Y_train.shape[0])
 print("Data Loaded")
 
 classes = [0, 1, 2, 3]
@@ -178,7 +179,7 @@ models = [
     },
 ]
 
-with open("./logs/regression/resultsML.csv", "w") as f:
+with open("./logs/resultsML.csv", "w") as f:
     writer = csv.DictWriter(
         f,
         fieldnames=[
@@ -201,10 +202,11 @@ with open("./logs/regression/resultsML.csv", "w") as f:
     )
     writer.writeheader()
 
-    for model in models:
+    for model in tqdm(models):
         cls = model["model"]
         cls.fit(X_train, Y_train)
         Y_pred = cls.predict(X_test)
+        Y_pred = torch.tensor(Y_pred)
         metric = calc(Y_pred, Y_test)
         write_res(writer, model["name"], metric)
 

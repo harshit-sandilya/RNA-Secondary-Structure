@@ -1,4 +1,5 @@
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import KFold
 import torch
 import pandas as pd
 import csv
@@ -6,11 +7,10 @@ import numpy as np
 from utils.metrics import calc
 
 train_file = [
-    "./data/final/bpRNA-train.csv",
-    "./data/final/RNAstrand-train.csv",
-    "./data/final/RFAM-train.csv",
+    "./data/csv/bpRNA.csv",
+    "./data/csv/RNAstrand.csv",
 ]
-test_file = "./data/final/RNAstrand-test.csv"
+test_file = "./data/csv/TS0.csv"
 
 
 def write_res(writer, model, metric):
@@ -64,10 +64,10 @@ def encode(df):
 def load_data():
     train0 = pd.read_csv(train_file[0])
     train1 = pd.read_csv(train_file[1])
-    train2 = pd.read_csv(train_file[2])
     test = pd.read_csv(test_file)
 
-    train = pd.concat([train0, train1, train2])
+    train = pd.concat([train0, train1])
+    train = train.drop_duplicates(subset=["sequence"], keep="first")
     train.reset_index(drop=True, inplace=True)
     train = train.sample(frac=1).reset_index(drop=True)
 
@@ -83,40 +83,51 @@ def load_data():
 
 
 X_train, Y_train, X_test, Y_test = load_data()
-Y_test = torch.tensor(Y_test)
-print(Y_train.shape[0])
-print("Data Loaded")
 
-classes = [0, 1, 2, 3]
+X = np.concatenate((X_train, X_test), axis=0)
+Y = np.concatenate((Y_train, Y_test), axis=0)
 
-with open("./logs/resultsML.csv", "w") as f:
-    writer = csv.DictWriter(
-        f,
-        fieldnames=[
-            "Model",
-            "Accuracy",
-            "Balanced Accuracy",
-            "F1 Score",
-            "Fbeta Score",
-            "Matthews Correlation Coefficient",
-            "Precision Score",
-            "Recall Score",
-            "Accuracy Unpadded",
-            "Balanced Accuracy Unpadded",
-            "F1 Score Unpadded",
-            "Fbeta Score Unpadded",
-            "Matthews Correlation Coefficient Unpadded",
-            "Precision Score Unpadded",
-            "Recall Score Unpadded",
-        ],
-    )
-    writer.writeheader()
+kf = KFold(n_splits=5, shuffle=True, random_state=42)
 
-    cls = RandomForestClassifier()
-    cls.fit(X_train, Y_train)
-    Y_pred = cls.predict(X_test)
-    Y_pred = torch.tensor(Y_pred)
-    metric = calc(Y_pred, Y_test)
-    write_res(writer, "Random_Forest", metric)
+for train_index, test_index in kf.split(X):
+    X_train, X_test = X[train_index], X[test_index]
+    Y_train, Y_test = Y[train_index], Y[test_index]
 
-print("Done")
+    Y_test = torch.tensor(Y_test)
+    print(Y_train.shape[0])
+    print("Data Loaded")
+
+    classes = [0, 1, 2, 3]
+
+    with open("./logs/resultsML.csv", "a") as f:
+        writer = csv.DictWriter(
+            f,
+            fieldnames=[
+                "Model",
+                "Accuracy",
+                "Balanced Accuracy",
+                "F1 Score",
+                "Fbeta Score",
+                "Matthews Correlation Coefficient",
+                "Precision Score",
+                "Recall Score",
+                "Accuracy Unpadded",
+                "Balanced Accuracy Unpadded",
+                "F1 Score Unpadded",
+                "Fbeta Score Unpadded",
+                "Matthews Correlation Coefficient Unpadded",
+                "Precision Score Unpadded",
+                "Recall Score Unpadded",
+            ],
+        )
+        writer.writeheader()
+
+        cls = RandomForestClassifier()
+        cls.fit(X_train, Y_train)
+        Y_pred = cls.predict(X_test)
+        Y_pred = torch.tensor(Y_pred)
+        metric = calc(Y_pred, Y_test)
+        write_res(writer, "Random_Forest", metric)
+        print(metric)
+
+    print("Done")

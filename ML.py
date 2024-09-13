@@ -5,6 +5,7 @@ import pandas as pd
 from tqdm import tqdm
 from sklearn.multioutput import MultiOutputClassifier
 from sklearn.multiclass import OneVsRestClassifier
+from sklearn.model_selection import KFold
 
 from sklearn.linear_model import (
     LogisticRegression,
@@ -33,10 +34,11 @@ train_file = "./data/final/train.csv"
 test_file = "./data/final/test.csv"
 
 
-def write_res(writer, model, metric):
+def write_res(writer, model, metric, i):
     writer.writerow(
         {
             "Model": model,
+            "Fold": i,
             "Accuracy": round(metric["accuracy"] * 100, 2),
             "Balanced Accuracy": round(metric["balanced_accuracy"] * 100, 2),
             "F1 Score": round(metric["f1_score"] * 100, 2),
@@ -97,8 +99,10 @@ def load_data():
 
 
 X_train, Y_train, X_test, Y_test = load_data()
-Y_test = torch.tensor(Y_test)
-print(Y_train.shape[0])
+X = np.concatenate((X_train, X_test), axis=0)
+Y = np.concatenate((Y_train, Y_test), axis=0)
+# Y_test = torch.tensor(Y_test)
+# print(Y_train.shape[0])
 print("Data Loaded")
 
 classes = [0, 1, 2, 3]
@@ -184,6 +188,7 @@ with open("./logs/resultsML.csv", "w") as f:
         f,
         fieldnames=[
             "Model",
+            "Fold",
             "Accuracy",
             "Balanced Accuracy",
             "F1 Score",
@@ -204,10 +209,15 @@ with open("./logs/resultsML.csv", "w") as f:
 
     for model in tqdm(models):
         cls = model["model"]
-        cls.fit(X_train, Y_train)
-        Y_pred = cls.predict(X_test)
-        Y_pred = torch.tensor(Y_pred)
-        metric = calc(Y_pred, Y_test)
-        write_res(writer, model["name"], metric)
+        for i in range(2, 11):
+            kf = KFold(n_splits=i, shuffle=True, random_state=42)
+            for train_index, test_index in kf.split(X):
+                X_train, X_test = X[train_index], X[test_index]
+                Y_train, Y_test = Y[train_index], Y[test_index]
+                cls.fit(X_train, Y_train)
+                Y_pred = cls.predict(X_test)
+                Y_pred = torch.tensor(Y_pred)
+                metric = calc(Y_pred, Y_test)
+                write_res(writer, model["name"], metric, i)
 
 print("Done")

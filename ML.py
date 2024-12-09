@@ -25,7 +25,6 @@ from sklearn.ensemble import (
     BaggingClassifier,
 )
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
-from sklearn.gaussian_process import GaussianProcessClassifier
 
 from utils.metrics import calc
 
@@ -35,32 +34,28 @@ test_file = "./data/final/test.csv"
 
 
 def write_res(writer, model, metric, i):
-    writer.writerow(
-        {
-            "Model": model,
-            "Fold": i,
-            "Accuracy": round(metric["accuracy"] * 100, 2),
-            "Balanced Accuracy": round(metric["balanced_accuracy"] * 100, 2),
-            "F1 Score": round(metric["f1_score"] * 100, 2),
-            "Fbeta Score": round(metric["fbeta_score"] * 100, 2),
-            "Matthews Correlation Coefficient": round(
-                metric["matthews_corrcoef"] * 100, 2
-            ),
-            "Precision Score": round(metric["precision_score"] * 100, 2),
-            "Recall Score": round(metric["recall_score"] * 100, 2),
-            "Accuracy Unpadded": round(metric["accuracy_unpad"] * 100, 2),
-            "Balanced Accuracy Unpadded": round(
-                metric["balanced_accuracy_unpad"] * 100, 2
-            ),
-            "F1 Score Unpadded": round(metric["f1_score_unpad"] * 100, 2),
-            "Fbeta Score Unpadded": round(metric["fbeta_score_unpad"] * 100, 2),
-            "Matthews Correlation Coefficient Unpadded": round(
-                metric["matthews_corrcoef_unpad"] * 100, 2
-            ),
-            "Precision Score Unpadded": round(metric["precision_score_unpad"] * 100, 2),
-            "Recall Score Unpadded": round(metric["recall_score_unpad"] * 100, 2),
-        }
-    )
+    dict_s = {
+        "Model": model,
+        "Fold": i,
+        "Accuracy": round(metric["accuracy"] * 100, 2),
+        "Balanced Accuracy": round(metric["balanced_accuracy"] * 100, 2),
+        "F1 Score": round(metric["f1_score"] * 100, 2),
+        "Fbeta Score": round(metric["fbeta_score"] * 100, 2),
+        "Matthews Correlation Coefficient": round(metric["matthews_corrcoef"] * 100, 2),
+        "Precision Score": round(metric["precision_score"] * 100, 2),
+        "Recall Score": round(metric["recall_score"] * 100, 2),
+        "Accuracy Unpadded": round(metric["accuracy_unpad"] * 100, 2),
+        "Balanced Accuracy Unpadded": round(metric["balanced_accuracy_unpad"] * 100, 2),
+        "F1 Score Unpadded": round(metric["f1_score_unpad"] * 100, 2),
+        "Fbeta Score Unpadded": round(metric["fbeta_score_unpad"] * 100, 2),
+        "Matthews Correlation Coefficient Unpadded": round(
+            metric["matthews_corrcoef_unpad"] * 100, 2
+        ),
+        "Precision Score Unpadded": round(metric["precision_score_unpad"] * 100, 2),
+        "Recall Score Unpadded": round(metric["recall_score_unpad"] * 100, 2),
+    }
+    print(dict_s)
+    writer.writerow(dict_s)
 
 
 def encode(df):
@@ -95,10 +90,10 @@ def load_data():
     X_test = df_test["sequence"].tolist()
     Y_test = df_test["structure"].tolist()
 
-    return np.array(X_train), np.array(Y_train), np.array(X_test), np.array(Y_test)
+    return (np.array(X_train), np.array(Y_train), np.array(X_test), np.array(Y_test))
 
 
-X_train, Y_train, X_test, Y_test = load_data()
+X_train, Y_train, X_test, Y_test, X_val, Y_val = load_data()
 X = np.concatenate((X_train, X_test), axis=0)
 Y = np.concatenate((Y_train, Y_test), axis=0)
 # Y_test = torch.tensor(Y_test)
@@ -109,41 +104,43 @@ classes = [0, 1, 2, 3]
 models = [
     {
         "name": "Logistic Regression",
-        "model": MultiOutputClassifier(OneVsRestClassifier(LogisticRegression())),
+        "model": MultiOutputClassifier(
+            OneVsRestClassifier(LogisticRegression(n_jobs=-1))
+        ),
     },
     {
         "name": "Ridge Classifier",
-        "model": MultiOutputClassifier(RidgeClassifier()),
+        "model": MultiOutputClassifier(RidgeClassifier(), n_jobs=-1),
     },
     {
         "name": "SGD Classifier",
-        "model": MultiOutputClassifier(OneVsRestClassifier(SGDClassifier())),
+        "model": MultiOutputClassifier(OneVsRestClassifier(SGDClassifier(n_jobs=-1))),
     },
     {
         "name": "Passive Aggressive Classifier",
         "model": MultiOutputClassifier(
-            OneVsRestClassifier(PassiveAggressiveClassifier())
+            OneVsRestClassifier(PassiveAggressiveClassifier(n_jobs=-1))
         ),
     },
     {
         "name": "K Neighbors Classifier",
-        "model": KNeighborsClassifier(),
+        "model": KNeighborsClassifier(n_jobs=-1),
     },
     {
         "name": "SVC",
-        "model": MultiOutputClassifier(OneVsRestClassifier(SVC())),
+        "model": MultiOutputClassifier(OneVsRestClassifier(SVC(), n_jobs=-1)),
     },
     {
         "name": "Gaussian NB",
-        "model": MultiOutputClassifier(GaussianNB()),
+        "model": MultiOutputClassifier(GaussianNB(), n_jobs=-1),
     },
     {
         "name": "Multinomial NB",
-        "model": MultiOutputClassifier(MultinomialNB()),
+        "model": MultiOutputClassifier(MultinomialNB(), n_jobs=-1),
     },
     {
         "name": "Bernoulli NB",
-        "model": MultiOutputClassifier(BernoulliNB()),
+        "model": MultiOutputClassifier(BernoulliNB(), n_jobs=-1),
     },
     {
         "name": "Decision Tree Classifier",
@@ -151,35 +148,29 @@ models = [
     },
     {
         "name": "Random Forest Classifier",
-        "model": RandomForestClassifier(),
+        "model": RandomForestClassifier(n_jobs=-1),
     },
     {
         "name": "Extra Trees Classifier",
-        "model": ExtraTreesClassifier(),
+        "model": ExtraTreesClassifier(n_jobs=-1),
     },
     {
         "name": "Gradient Boosting Classifier",
         "model": MultiOutputClassifier(
-            OneVsRestClassifier(GradientBoostingClassifier())
+            OneVsRestClassifier(GradientBoostingClassifier(), n_jobs=-1)
         ),
     },
     {
         "name": "Ada Boost Classifier",
-        "model": MultiOutputClassifier(AdaBoostClassifier()),
+        "model": MultiOutputClassifier(AdaBoostClassifier(), n_jobs=-1),
     },
     {
         "name": "Bagging Classifier",
-        "model": MultiOutputClassifier(BaggingClassifier()),
+        "model": MultiOutputClassifier(BaggingClassifier(), n_jobs=-1),
     },
     {
         "name": "Linear Discriminant Analysis",
-        "model": MultiOutputClassifier(LinearDiscriminantAnalysis()),
-    },
-    {
-        "name": "Gaussian Process Classifier",
-        "model": MultiOutputClassifier(
-            OneVsRestClassifier(GaussianProcessClassifier())
-        ),
+        "model": MultiOutputClassifier(LinearDiscriminantAnalysis(), n_jobs=-1),
     },
 ]
 
@@ -217,6 +208,7 @@ with open("./logs/resultsML.csv", "w") as f:
                 cls.fit(X_train, Y_train)
                 Y_pred = cls.predict(X_test)
                 Y_pred = torch.tensor(Y_pred)
+                Y_test = torch.tensor(Y_test)
                 metric = calc(Y_pred, Y_test)
                 write_res(writer, model["name"], metric, i)
 

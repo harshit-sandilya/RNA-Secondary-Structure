@@ -45,24 +45,15 @@ for file in remaining_list:
     df.to_csv(f"./data/final/{file}.csv", index=False)
 
 train_list = [
-    "CRW-train",
-    "RFAM-train",
     "RNAstrand-train",
-    "PDB-train",
-    "bpRNA-train",
-    "TR0",
+    # "bpRNA-train",
     "TR1",
-    "VL0",
     "VL1",
 ]
 
 test_list = [
-    "CRW-test",
-    "RFAM-test",
     "RNAstrand-test",
-    "PDB-test",
-    "bpRNA-test",
-    "TS0",
+    # "bpRNA-test",
     "TS1",
 ]
 

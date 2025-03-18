@@ -93,11 +93,9 @@ def load_data():
     return (np.array(X_train), np.array(Y_train), np.array(X_test), np.array(Y_test))
 
 
-X_train, Y_train, X_test, Y_test, X_val, Y_val = load_data()
+X_train, Y_train, X_test, Y_test = load_data()
 X = np.concatenate((X_train, X_test), axis=0)
 Y = np.concatenate((Y_train, Y_test), axis=0)
-# Y_test = torch.tensor(Y_test)
-# print(Y_train.shape[0])
 print("Data Loaded")
 
 classes = [0, 1, 2, 3]

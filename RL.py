@@ -51,7 +51,7 @@ for batch in range(x_test.shape[0]):
         reward = env.calculate_reward(action)
         total_reward += reward
         action = action.item()
-        pred = y_test[batch, step][0].item()
+        pred = y_test[batch, step].item()
         predictions.append(action)
         actuals.append(pred)
 print(f"[{time.time()-start_time}]Got the predictions")

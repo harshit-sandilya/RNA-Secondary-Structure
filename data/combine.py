@@ -46,14 +46,14 @@ for file in remaining_list:
 
 train_list = [
     "RNAstrand-train",
-    # "bpRNA-train",
+    "bpRNA-train",
     "TR1",
     "VL1",
 ]
 
 test_list = [
     "RNAstrand-test",
-    # "bpRNA-test",
+    "bpRNA-test",
     "TS1",
 ]
 

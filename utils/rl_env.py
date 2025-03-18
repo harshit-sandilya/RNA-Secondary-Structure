@@ -23,10 +23,6 @@ class Environment(gym.Env):
 
     def step(self, action):
         observation = self.sample[self.current_batch, self.current_step]
-        # if not np.all(observation == 0):
-        #     reward = self.calculate_reward(action)
-        # else:
-        #     reward = 0
         reward = self.calculate_reward(action)
         self.current_step += 1
         done = self.current_step >= self.time_steps
